@@ -66,3 +66,101 @@
 #     object seperation
 #     object persistance
 #     counting or sorting objects
+
+def object_detection(grid):
+    """
+    Input:
+    A two-dimensional grid (list of lists) where each cell contains either zero or a positive integer.
+    Zero represents an empty cell, and positive integers represent different objects (e.g., different colors or identifiers).
+    The grid may contain multiple such objects composed of connected cells with the same non-zero value.
+
+    Functionality:
+    The `object_detection` function scans the input grid to identify and extract all distinct connected regions (objects).
+    Cells are considered connected if they are adjacent horizontally, vertically, or diagonally (all eight directions).
+    For each detected object, the function creates a subarray that captures the object's shape within its minimal bounding box,
+    preserving the original values. The function returns a list of these subarrays, each representing an individual object extracted from the grid.
+
+    Output:
+    A list of two-dimensional subarrays, where each subarray corresponds to a detected object from the input grid.
+    Each subarray contains the object's cells within its minimal bounding box, with zeros filling any empty spaces within that box.
+
+    Example Input:
+    grid = [
+        [1, 1, 0, 0],
+        [0, 1, 0, 2],
+        [0, 0, 2, 2],
+        [3, 0, 0, 0]
+    ]
+
+    Example Output:
+    Object 1:
+    [1, 1]
+    [0, 1]
+
+    Object 2:
+    [0, 2]
+    [2, 2]
+
+    Object 3:
+    [3]
+
+    Explanation:
+    - Object 1 consists of connected cells with the value '1' at positions (0,0), (0,1), and (1,1).
+    The subarray captures these cells within their minimal bounding box.
+    - Object 2 consists of connected cells with the value '2' at positions (1,3), (2,2), and (2,3).
+    The subarray represents this cluster of '2's.
+    - Object 3 is the single cell with the value '3' at position (3,0).
+    Its subarray contains just this cell.
+    """
+
+    from collections import deque
+
+    height = len(grid)
+    width = len(grid[0]) if height > 0 else 0
+    visited = [[False for _ in range(width)] for _ in range(height)]
+    objects = []
+
+    for i in range(height):
+        for j in range(width):
+            if grid[i][j] != 0 and not visited[i][j]:
+                # Initialize variables for the new object
+                color = grid[i][j]
+                min_row, max_row = i, i
+                min_col, max_col = j, j
+                object_pixels = []
+                queue = deque()
+                queue.append((i, j))
+                visited[i][j] = True
+
+                # Perform BFS to find all connected pixels of the object
+                while queue:
+                    r, c = queue.popleft()
+                    object_pixels.append((r, c))
+
+                    # Update bounding box
+                    min_row = min(min_row, r)
+                    max_row = max(max_row, r)
+                    min_col = min(min_col, c)
+                    max_col = max(max_col, c)
+
+                    # Check neighbors (including diagonals)
+                    for dr, dc in [(-1, -1), (-1, 0), (-1, 1),
+                                   (0, -1),          (0, 1),
+                                   (1, -1),  (1, 0),  (1, 1)]:
+                        nr, nc = r + dr, c + dc
+                        if (0 <= nr < height and 0 <= nc < width and
+                                grid[nr][nc] == color and not visited[nr][nc]):
+                            visited[nr][nc] = True
+                            queue.append((nr, nc))
+
+                # Extract the object's subarray from the grid
+                obj_height = max_row - min_row + 1
+                obj_width = max_col - min_col + 1
+                obj_array = [[0 for _ in range(obj_width)] for _ in range(obj_height)]
+
+                for r, c in object_pixels:
+                    obj_array[r - min_row][c - min_col] = grid[r][c]
+
+                objects.append(obj_array)
+
+    return objects
