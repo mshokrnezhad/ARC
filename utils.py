@@ -180,7 +180,8 @@ def draw_task(json_obj, width=30, height=12, include_test=False, label=True, bor
     increment = 0.01
     for _ in range(int(paddingless_width // increment)):
         incr = (allocation + increment) <= max_widths
-        allocation[incr] += increment / incr.sum()
+        if incr.sum() > 0:
+            allocation[incr] += increment / incr.sum()
 
     drawlist = []
     x_ptr = 0
