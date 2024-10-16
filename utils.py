@@ -153,11 +153,11 @@ def draw_grid(grid, xmax=10, ymax=10, padding=.5, extra_bottom_padding=0.5, grou
     return drawing
 
 
-def draw_task(json_obj, width=30, height=12, include_test=False, label=True, bordercols=['#111111ff', '#111111ff'], shortdesc=False):
+def draw_task(json_obj, index, id, width=30, height=18, include_test=False, label=True, bordercols=['#111111ff', '#111111ff', '#111111ff'], shortdesc=False):
     padding = 0.5
     bonus_padding = 0.25
     io_gap = 0.4
-    ymax = (height - padding - bonus_padding - io_gap) / 2
+    ymax = (height - padding - bonus_padding - 2 * io_gap) / 3
 
     if include_test:
         examples = json_obj['train'] + json_obj['test']
@@ -170,9 +170,11 @@ def draw_task(json_obj, width=30, height=12, include_test=False, label=True, bor
     for i, item in enumerate(examples):
         input_grid = item['input']
         output_grid = item.get('output', None)
+        result_grid = item.get('result', None)
         input_grid_ratio = len(input_grid[0]) / len(input_grid)
         output_grid_ratio = len(output_grid[0]) / len(output_grid) if output_grid else 0
-        max_ratio = max(input_grid_ratio, output_grid_ratio)
+        result_grid_ratio = len(result_grid[0]) / len(result_grid) if result_grid else 0
+        max_ratio = max(input_grid_ratio, output_grid_ratio, result_grid_ratio)
         xmax = ymax * max_ratio
         max_widths[i] = xmax
 
@@ -189,82 +191,50 @@ def draw_task(json_obj, width=30, height=12, include_test=False, label=True, bor
     for i, item in enumerate(examples):
         input_grid = item['input']
         output_grid = item.get('output', None)
+        result_grid = item.get('result', None)
 
         if shortdesc:
             if i >= n_train:
                 input_label = ''
                 output_label = ''
+                result_label = ''
             else:
                 input_label = ''
                 output_label = ''
+                result_label = ''
         else:
             if i >= n_train:
                 input_label = f'Test {i - n_train + 1}'
                 output_label = f'Test {i - n_train + 1}' if output_grid else ''
+                result_label = f'Test {i - n_train + 1}' if result_grid else ''
             else:
                 input_label = f'Input {i + 1}'
                 output_label = f'Output {i + 1}' if output_grid else ''
+                result_label = f'Result {i + 1}' if result_grid else ''
 
         input_grid, offset, (input_x, input_y) = draw_grid(input_grid, padding=padding, xmax=allocation[i], ymax=ymax, group=True, label=input_label, extra_bottom_padding=0.5, bordercol=bordercols[0])
         drawlist.append(drawsvg.Use(input_grid, x=x_ptr + (allocation[i] + padding - input_x) / 2 - offset[0], y=-offset[1]))
-        x_ptr += input_x
-        y_ptr = max(y_ptr, input_y)
-
-    x_ptr = 0
-    y_ptr2 = 0
-    for i, item in enumerate(examples):
-        input_grid = item['input']
-        output_grid = item.get('output', None)
 
         if output_grid:
-            input_grid, offset, (input_x, input_y) = draw_grid(input_grid, padding=padding, xmax=allocation[i], ymax=ymax, group=True, label=input_label, extra_bottom_padding=0.5, bordercol=bordercols[0])
             output_grid, offset, (output_x, output_y) = draw_grid(output_grid, padding=padding, xmax=allocation[i], ymax=ymax, group=True, label=output_label, extra_bottom_padding=0.5, bordercol=bordercols[1])
+            drawlist.append(drawsvg.Use(output_grid, x=x_ptr + (allocation[i] + padding - output_x) / 2 - offset[0], y=input_y + io_gap - offset[1]))
 
-            drawlist.append(drawsvg.Line(
-                x_ptr + input_x / 2,
-                y_ptr + padding - 0.6,
-                x_ptr + input_x / 2,
-                y_ptr + padding + io_gap - 0.6,
-                stroke_width=0.05, stroke='#888888'))
-            drawlist.append(drawsvg.Line(
-                x_ptr + input_x / 2 - 0.15,
-                y_ptr + padding + io_gap - 0.8,
-                x_ptr + input_x / 2,
-                y_ptr + padding + io_gap - 0.6,
-                stroke_width=0.05, stroke='#888888'))
-            drawlist.append(drawsvg.Line(
-                x_ptr + input_x / 2 + 0.15,
-                y_ptr + padding + io_gap - 0.8,
-                x_ptr + input_x / 2,
-                y_ptr + padding + io_gap - 0.6,
-                stroke_width=0.05, stroke='#888888'))
+        if result_grid:
+            result_grid, offset, (result_x, result_y) = draw_grid(result_grid, padding=padding, xmax=allocation[i], ymax=ymax, group=True, label=result_label, extra_bottom_padding=0.5, bordercol=bordercols[2])
+            drawlist.append(drawsvg.Use(result_grid, x=x_ptr + (allocation[i] + padding - result_x) / 2 - offset[0], y=input_y + output_y + 2 * io_gap - offset[1]))
 
-            drawlist.append(drawsvg.Use(output_grid, x=x_ptr + (allocation[i] + padding - output_x) / 2 - offset[0], y=y_ptr - offset[1] + io_gap))
-        else:
-            drawlist.append(drawsvg.Text(
-                '?',
-                x=x_ptr + (allocation[i] + padding) / 2,
-                y=y_ptr + input_y / 2 + bonus_padding,
-                font_size=1,
-                font_family='Anuphan',
-                font_weight='700',
-                fill='#333333',
-                text_anchor='middle',
-                alignment_baseline='middle',
-            ))
         x_ptr += input_x
-        y_ptr2 = max(y_ptr2, y_ptr + input_y + io_gap)
 
     x_ptr = round(x_ptr, 1)
-    y_ptr2 = round(y_ptr2, 1)
+    y_ptr2 = round(input_y * 3 + 2 * io_gap, 1)
     d = drawsvg.Drawing(x_ptr, y_ptr2 + 0.2, origin=(0, 0))
     d.append(drawsvg.Rectangle(0, 0, '100%', '100%', fill='#eeeff6'))
-    d.embed_google_font('Anuphan:wght@400;600;700', text=set('Input Output 0123456789x Test Task ABCDEFGHIJ? abcdefghjklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ'))
+    d.embed_google_font('Anuphan:wght@400;600;700', text=set('Input Output Result 0123456789x Test Task ABCDEFGHIJ? abcdefghjklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ'))
     for item in drawlist:
         d.append(item)
 
     fontsize = 0.3
-    d.append(drawsvg.Text(f"Task", x=x_ptr - 0.1, y=y_ptr2 + 0.1, font_size=fontsize, font_family='Anuphan', font_weight='600', fill='#666666', text_anchor='end', alignment_baseline='bottom'))
+    d.append(drawsvg.Text(f"Task {index}: {id}", x=x_ptr - 0.1, y=y_ptr2 + 0.1, font_size=fontsize, font_family='Anuphan', font_weight='600', fill='#666666', text_anchor='end', alignment_baseline='bottom'))
 
     d.set_pixel_scale(40)
     return d
@@ -282,3 +252,36 @@ def output_drawing(d: drawsvg.Drawing, filename: str, context=None):
         cairosvg.svg2pdf(bytestring=buffer.getvalue(), write_to=filename)
     else:
         raise ValueError(f'Unknown file extension for {filename}')
+
+
+def calculate_similarity(output, result):
+    total_elements = len(output) * len(output[0])
+    similar_elements = sum(
+        1 for i in range(len(output)) for j in range(len(output[0])) if output[i][j] == result[i][j]
+    )
+    return round((similar_elements / total_elements) * 100, 2)
+
+
+def analyze_task(task_json):
+    if isinstance(task_json, dict):
+        task_data = task_json
+    else:
+        task_data = json.loads(task_json)
+
+    # Analyze Train Data
+    print("Train:")
+    for idx, sample in enumerate(task_data['train'], start=1):
+        output = sample['output']
+        result = sample['result']
+        is_equal = 'Correct' if output == result else 'Wrong'
+        similarity_ratio = calculate_similarity(output, result)
+        print(f"- Sample {idx}: {is_equal}, Similarity Ratio: {similarity_ratio}%")
+
+    # Analyze Test Data
+    print("\nTest:")
+    for test_sample in task_data['test']:
+        output = test_sample['output']
+        result = test_sample['result']
+        is_equal = 'Correct' if output == result else 'Wrong'
+        similarity_ratio = calculate_similarity(output, result)
+        print(f"{is_equal}, Similarity Ratio: {similarity_ratio}%")

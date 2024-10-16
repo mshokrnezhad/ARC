@@ -67,6 +67,9 @@
 #     object persistance
 #     counting or sorting objects
 
+import numpy as np
+
+
 def object_detection(grid):
     """
     Input:
@@ -164,3 +167,116 @@ def object_detection(grid):
                 objects.append(obj_array)
 
     return objects
+
+
+def enlarge(array, constant):
+    """
+    Input:
+    A two-dimensional array (list of lists or NumPy array) and a positive integer constant.
+
+    Functionality:
+    The `enlarge` function takes the input 2D array and enlarges it by repeating its elements based on the given constant.
+    The resulting enlarged array has dimensions that are `constant` times the dimensions of the original array.
+    Each element in the original array is expanded to cover a square block of size `constant x constant` in the enlarged array.
+
+    Output:
+    A new two-dimensional array where each element of the original array is repeated to form a larger grid.
+
+    Example Input:
+    original_array = [
+        [1, 2, 3],
+        [4, 5, 6]
+    ]
+    constant = 3
+
+    Example Output: [
+        [1 1 1 2 2 2 3 3 3]
+        [1 1 1 2 2 2 3 3 3]
+        [1 1 1 2 2 2 3 3 3]
+        [4 4 4 5 5 5 6 6 6]
+        [4 4 4 5 5 5 6 6 6]
+        [4 4 4 5 5 5 6 6 6]
+    ]
+
+    Explanation:
+    - Each element of the original array is repeated in a block of `constant x constant` size.
+    For example, the value '1' at position (0,0) in the original array is expanded to form a 3x3 block in the enlarged array.
+    """
+
+    # Convert the input to a NumPy array if it isn't already
+    array = np.array(array)
+
+    # Get the shape of the original array
+    original_rows, original_cols = array.shape
+
+    # Create a new enlarged array with the desired size
+    enlarged_rows = original_rows * constant
+    enlarged_cols = original_cols * constant
+
+    # Initialize the enlarged array with zeros
+    enlarged_array = np.zeros((enlarged_rows, enlarged_cols), dtype=array.dtype)
+
+    # Fill the enlarged array by repeating the original values
+    for i in range(enlarged_rows):
+        for j in range(enlarged_cols):
+            enlarged_array[i, j] = array[i // constant, j // constant]
+
+    return enlarged_array.tolist()
+
+
+def array_and(array_1, array_2, x_step_size, y_step_size):
+    """
+    Input:
+    Two two-dimensional arrays (list of lists or NumPy arrays) and two positive integer constants representing the step sizes.
+
+    Functionality:
+    The `array_and` function takes two 2D arrays and performs an element-wise logical 'and' operation between the two arrays.
+    If the values in `array_1` and `array_2` are equal, the corresponding element in the result is set to the value from `array_1`.
+    Otherwise, it is set to 0. The operation is carried out by sliding `array_1` over `array_2` in chunks of the same size,
+    starting from the upper-left corner, moving horizontally by `x_step_size` and vertically by `y_step_size`.
+    The result has the same dimensions as `array_2`.
+
+    Output:
+    A new two-dimensional array where each element represents the result of the logical 'and' operation between `array_1`
+    and corresponding portions of `array_2`.
+
+    Example Input:
+    array_1 = [
+        [1, 2],
+        [3, 4]
+    ]
+    array_2 = [
+        [1, 2, 3, 4],
+        [3, 4, 1, 2],
+        [5, 6, 3, 4]
+    ]
+    x_step_size = 2
+    y_step_size = 1
+
+    Example Output:
+    [
+        [1 2 0 0]
+        [3 4 0 0]
+        [0 0 0 0]
+    ]
+
+    Explanation:
+    - The function slides `array_1` over `array_2` and performs an element-wise comparison.
+    - If elements are equal, they are retained; otherwise, they are set to 0.
+    """
+
+    array_1 = np.array(array_1)
+    array_2 = np.array(array_2)
+
+    a1_height, a1_width = array_1.shape
+    a2_height, a2_width = array_2.shape
+
+    result = np.zeros_like(array_2)
+
+    for y in range(0, a2_height - a1_height + 1, y_step_size):
+        for x in range(0, a2_width - a1_width + 1, x_step_size):
+            a2_chunk = array_2[y:y + a1_height, x:x + a1_width]
+            and_result = np.where(array_1 == a2_chunk, array_1, 0)
+            result[y:y + a1_height, x:x + a1_width] = and_result
+
+    return result.tolist()
