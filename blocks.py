@@ -69,6 +69,8 @@
 
 import numpy as np
 
+# blocks extracted from arc-prize-2024
+
 
 def object_detection(grid):
     """
@@ -283,46 +285,45 @@ def array_and(array_1, array_2, x_step_size, y_step_size):
 
 
 def find_loops(grid):
-    import sys
-    sys.setrecursionlimit(10000)  # Increase recursion limit if necessary
-
     rows = len(grid)
-    cols = len(grid[0]) if rows > 0 else 0
-
-    # Directions for 8-connectivity (including diagonals)
-    directions = [(-1, -1), (-1, 0), (-1, 1),
-                  (0, -1),          (0, 1),
-                  (1, -1),  (1, 0),  (1, 1)]
+    cols = len(grid[0])
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1),  # Up, Down, Left, Right
+                  (-1, -1), (1, 1), (-1, 1), (1, -1)]  # Diagonal directions
 
     visited = set()
-    loops = []
 
-    def dfs(u, parent, path, rec_stack):
-        visited.add(u)
-        rec_stack.add(u)
-        path.append(u)
+    def dfs(x, y, parent, path):
+        if (x, y) in visited:
+            if path[0] == (x, y) and len(path) >= 4:
+                return path  # path forms a valid loop
+            return None
+
+        visited.add((x, y))
+        path.append((x, y))
 
         for dx, dy in directions:
-            nx, ny = u[0] + dx, u[1] + dy
-            v = (nx, ny)
+            nx, ny = x + dx, y + dy
             if 0 <= nx < rows and 0 <= ny < cols and grid[nx][ny] != 0:
-                if v not in visited:
-                    dfs(v, u, path, rec_stack)
-                elif v != parent and v in rec_stack:
-                    # Found a cycle
-                    idx = path.index(v)
-                    cycle = path[idx:].copy()
-                    cycle_set = set(cycle)
-                    # Check if cycle is unique
-                    if not any(cycle_set == set(existing_loop['boundary']) for existing_loop in loops):
-                        loops.append({'boundary': cycle})
-        rec_stack.remove(u)
+                if (nx, ny) != parent:
+                    result = dfs(nx, ny, (x, y), path)
+                    if result:
+                        return result
+
         path.pop()
+        visited.remove((x, y))  # Backtrack
+        return None
+
+    loops = []
 
     for i in range(rows):
         for j in range(cols):
             if grid[i][j] != 0 and (i, j) not in visited:
-                dfs((i, j), None, [], set())
+                path = dfs(i, j, None, [])
+                if path:
+                    # Check if the detected loop is a new loop
+                    path_set = set(path)
+                    if not any(path_set == set(existing_loop['boundary']) for existing_loop in loops):
+                        loops.append({'boundary': path})
 
     # Now, for each loop, find the interior elements
     for loop in loops:
@@ -368,3 +369,19 @@ def find_loops(grid):
 def change_elements_color(grid, elements, new_value):
     for x, y in elements:
         grid[x][y] = new_value
+
+    return grid
+
+# general blocks
+
+
+def rotate_grid(grid, degrees):
+    if degrees not in [90, 180, 270]:
+        raise ValueError("Degrees must be 90, 180, or 270")
+
+    if degrees == 90:
+        return [list(row) for row in zip(*grid[::-1])]
+    elif degrees == 180:
+        return [row[::-1] for row in grid[::-1]]
+    elif degrees == 270:
+        return [list(row) for row in zip(*grid)][::-1]
