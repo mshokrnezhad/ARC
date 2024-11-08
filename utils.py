@@ -153,7 +153,7 @@ def draw_grid(grid, xmax=10, ymax=10, padding=.5, extra_bottom_padding=0.5, grou
     return drawing
 
 
-def draw_task(json_obj, index, id, width=30, height=18, include_test=False, label=True, bordercols=['#111111ff', '#111111ff', '#111111ff'], shortdesc=False):
+def draw_task_v1(json_obj, index, id, width=30, height=18, include_test=False, label=True, bordercols=['#111111ff', '#111111ff', '#111111ff'], shortdesc=False):  # when the input includes three rows
     padding = 0.5
     bonus_padding = 0.25
     io_gap = 0.4
@@ -240,6 +240,76 @@ def draw_task(json_obj, index, id, width=30, height=18, include_test=False, labe
     return d
 
 
+def draw_task_v2(json_obj, index, id, width=30, height=18, include_test=False, label=True, bordercols=['#111111ff', '#111111ff', '#111111ff'], shortdesc=False):  # when the input includes two rows
+    padding = 0.5
+    bonus_padding = 0.25
+    io_gap = 0.4
+
+    if include_test:
+        examples = json_obj['train'] + json_obj['test']
+    else:
+        examples = json_obj['train']
+    n_train = len(json_obj['train'])
+    paddingless_width = width - padding * len(examples)
+
+    drawlist = []
+    x_ptr = 0
+    max_y_ptr = 0
+
+    for i, item in enumerate(examples):
+        input_grid = item['input']
+        output_grid = item.get('output', None)
+        result_grid = item.get('result', None)
+
+        # Determine the number of rows needed for this example
+        num_rows = 1 + bool(output_grid) + bool(result_grid)
+        ymax = (height - padding - bonus_padding - (num_rows - 1) * io_gap) / num_rows
+
+        input_grid_ratio = len(input_grid[0]) / len(input_grid)
+        output_grid_ratio = len(output_grid[0]) / len(output_grid) if output_grid else 0
+        result_grid_ratio = len(result_grid[0]) / len(result_grid) if result_grid else 0
+        max_ratio = max(input_grid_ratio, output_grid_ratio, result_grid_ratio)
+        xmax = ymax * max_ratio
+
+        if shortdesc:
+            input_label = output_label = result_label = ''
+        else:
+            input_label = f'Input {i + 1}'
+            output_label = f'Output {i + 1}' if output_grid else ''
+            result_label = f'Result {i + 1}' if result_grid else ''
+
+        input_grid, offset, (input_x, input_y) = draw_grid(input_grid, padding=padding, xmax=xmax, ymax=ymax, group=True, label=input_label, extra_bottom_padding=0.5, bordercol=bordercols[0])
+        drawlist.append(drawsvg.Use(input_grid, x=x_ptr + (xmax + padding - input_x) / 2 - offset[0], y=-offset[1]))
+
+        y_offset = input_y + io_gap
+
+        if output_grid:
+            output_grid, offset, (output_x, output_y) = draw_grid(output_grid, padding=padding, xmax=xmax, ymax=ymax, group=True, label=output_label, extra_bottom_padding=0.5, bordercol=bordercols[1])
+            drawlist.append(drawsvg.Use(output_grid, x=x_ptr + (xmax + padding - output_x) / 2 - offset[0], y=y_offset - offset[1]))
+            y_offset += output_y + io_gap
+
+        if result_grid:
+            result_grid, offset, (result_x, result_y) = draw_grid(result_grid, padding=padding, xmax=xmax, ymax=ymax, group=True, label=result_label, extra_bottom_padding=0.5, bordercol=bordercols[2])
+            drawlist.append(drawsvg.Use(result_grid, x=x_ptr + (xmax + padding - result_x) / 2 - offset[0], y=y_offset - offset[1]))
+
+        x_ptr += input_x
+        max_y_ptr = max(max_y_ptr, y_offset)
+
+    final_height = round(max_y_ptr, 1)
+    d = drawsvg.Drawing(x_ptr, final_height + 0.2, origin=(0, 0))
+    d.append(drawsvg.Rectangle(0, 0, '100%', '100%', fill='#eeeff6'))
+    d.embed_google_font('Anuphan:wght@400;600;700', text=set('Input Output Result 0123456789x Test Task ABCDEFGHIJ? abcdefghjklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ'))
+
+    for item in drawlist:
+        d.append(item)
+
+    fontsize = 0.3
+    d.append(drawsvg.Text(f"Task {index}: {id}", x=x_ptr - 0.1, y=final_height + 0.1, font_size=fontsize, font_family='Anuphan', font_weight='600', fill='#666666', text_anchor='end', alignment_baseline='bottom'))
+
+    d.set_pixel_scale(40)
+    return d
+
+
 def output_drawing(d: drawsvg.Drawing, filename: str, context=None):
     if filename.endswith('.svg'):
         d.save_svg(filename)
@@ -285,3 +355,38 @@ def analyze_task(task_json):
         is_equal = 'Correct' if output == result else 'Wrong'
         similarity_ratio = calculate_similarity(output, result)
         print(f"{is_equal}, Similarity Ratio: {similarity_ratio}%")
+
+
+def store_json(id, transition, task_, filename):
+    with open(filename, 'r') as file:
+        data = json.load(file)
+
+    task = {}
+    task["transition"] = transition
+    task["task"] = task_
+
+    data[id] = task
+
+    with open(filename, 'w') as file:
+        json.dump(data, file, indent=4)
+
+
+def update_task_ids(ids_path, id):
+    with open(ids_path, 'r') as file:
+        task_ids = json.load(file)
+
+    try:
+        last_index = int(list(task_ids.keys())[-1])
+    except IndexError:
+        last_index = -1
+    task_ids[str(last_index + 1)] = id
+
+    with open(ids_path, 'w') as file:
+        json.dump(task_ids, file, indent=4)
+
+
+def check_duplication(ids_path, id):
+    with open(ids_path, 'r') as file:
+        task_ids = json.load(file)
+
+    return any(id == sub_value for sub_value in task_ids.values()) == False
