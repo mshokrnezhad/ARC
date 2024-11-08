@@ -24,17 +24,8 @@
 # allows expressing solutions to many tasks as short programs. Such a DSL may best be built by bootstrapping, that is, building a minimal version of
 # it and then iterating back and forth between using it to solve ARC tasks and expanding it to account for unsolvable ARC tasks, all while having
 # abstractness and flexibility of the primitives and how they can interplay in mind.
-
-# Geometry
-#     do nothing
-#     rotate
-#     mirror
-#     shift image
-#     crop image background
-#     draw border
+#
 # Objects
-#     rotate
-#     mirror
 #     shirt objects
 #     move two objects together
 #     move objects to edge
@@ -285,6 +276,41 @@ def array_and(array_1, array_2, x_step_size, y_step_size):
 
 
 def find_loops(grid):
+    """
+    Input:
+    A two-dimensional grid (list of lists) where each cell contains either zero or a positive integer.
+    Zero represents an empty cell, and positive integers represent different objects (e.g., different colors or identifiers).
+
+    Functionality:
+    The `find_loops` function scans the input grid to identify and extract all distinct loops formed by connected cells with the same non-zero value.
+    Cells are considered connected if they are adjacent horizontally, vertically, or diagonally (all eight directions).
+    For each detected loop, the function creates a list of coordinates representing the loop's boundary and its interior elements.
+    The function returns a list of dictionaries, each containing the boundary and interior of a detected loop.
+
+    Output:
+    A list of dictionaries, where each dictionary contains two keys:
+    - 'boundary': A list of coordinates representing the boundary of the loop.
+    - 'interior': A list of coordinates representing the interior elements of the loop.
+
+    Example Input:
+    grid = [
+        [1, 1, 1, 0],
+        [1, 0, 1, 2],
+        [1, 1, 1, 2],
+        [3, 0, 0, 2]
+    ]
+
+    Example Output:
+    [
+        {'boundary': [(0, 0), (0, 1), (0, 2), (1, 2), (2, 2), (2, 1), (2, 0), (1, 0)], 'interior': [(1, 1)]},
+        {'boundary': [(1, 3), (2, 3), (3, 3)], 'interior': []}
+    ]
+
+    Explanation:
+    - The first loop consists of connected cells with the value '1' forming a loop with an interior cell at position (1,1).
+    - The second loop consists of connected cells with the value '2' at positions (1,3), (2,3), and (3,3).
+    """
+
     rows = len(grid)
     cols = len(grid[0])
     directions = [(-1, 0), (1, 0), (0, -1), (0, 1),  # Up, Down, Left, Right
@@ -367,6 +393,41 @@ def find_loops(grid):
 
 
 def change_elements_color(grid, elements, new_value):
+    """
+    Input:
+    A two-dimensional grid (list of lists) where each cell contains either zero or a positive integer.
+    Zero represents an empty cell, and positive integers represent different objects (e.g., different colors or identifiers).
+    A list of elements (coordinates) to be changed and a new value to set for those elements.
+
+    Functionality:
+    The `change_elements_color` function scans the input grid and changes the color (value) of the specified elements to the new value.
+    The elements are provided as a list of coordinates, and the new value is a positive integer.
+
+    Output:
+    The modified grid with the specified elements changed to the new value.
+
+    Example Input:
+    grid = [
+        [1, 1, 0, 0],
+        [0, 1, 0, 2],
+        [0, 0, 2, 2],
+        [3, 0, 0, 0]
+    ]
+    elements = [(0, 0), (1, 1), (2, 2)]
+    new_value = 9
+
+    Example Output:
+    [
+        [9, 1, 0, 0],
+        [0, 9, 0, 2],
+        [0, 0, 9, 2],
+        [3, 0, 0, 0]
+    ]
+
+    Explanation:
+    - The elements at coordinates (0, 0), (1, 1), and (2, 2) are changed to the new value '9'.
+    """
+
     for x, y in elements:
         grid[x][y] = new_value
 
@@ -376,6 +437,38 @@ def change_elements_color(grid, elements, new_value):
 
 
 def rotate_grid(grid, degrees):
+    """
+    Input:
+    A two-dimensional grid (list of lists) where each cell contains either zero or a positive integer.
+    Zero represents an empty cell, and positive integers represent different objects (e.g., different colors or identifiers).
+    An integer representing the degrees to rotate the grid (90, 180, or 270).
+
+    Functionality:
+    The `rotate_grid` function rotates the input grid by the specified degrees in a clockwise direction.
+    The function supports rotations of 90, 180, and 270 degrees.
+
+    Output:
+    A new two-dimensional grid that is the result of rotating the input grid by the specified degrees.
+
+    Example Input:
+    grid = [
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9]
+    ]
+    degrees = 90
+
+    Example Output:
+    [
+        [7, 4, 1],
+        [8, 5, 2],
+        [9, 6, 3]
+    ]
+
+    Explanation:
+    - The input grid is rotated 90 degrees clockwise to produce the output grid.
+    """
+
     if degrees not in [90, 180, 270]:
         raise ValueError("Degrees must be 90, 180, or 270")
 
@@ -385,3 +478,203 @@ def rotate_grid(grid, degrees):
         return [row[::-1] for row in grid[::-1]]
     elif degrees == 270:
         return [list(row) for row in zip(*grid)][::-1]
+
+
+def mirror_grid(grid, direction):
+    """
+    Input:
+    A two-dimensional grid (list of lists) where each cell contains either zero or a positive integer.
+    Zero represents an empty cell, and positive integers represent different objects (e.g., different colors or identifiers).
+    A string representing the direction to mirror the grid ('hor' for horizontal or 'ver' for vertical).
+
+    Functionality:
+    The `mirror_grid` function mirrors the input grid in the specified direction.
+    If the direction is 'hor', the grid is mirrored horizontally (left to right).
+    If the direction is 'ver', the grid is mirrored vertically (top to bottom).
+
+    Output:
+    A new two-dimensional grid that is the result of mirroring the input grid in the specified direction.
+
+    Example Input:
+    grid = [
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9]
+    ]
+    direction = 'hor'
+
+    Example Output:
+    [
+        [3, 2, 1],
+        [6, 5, 4],
+        [9, 8, 7]
+    ]
+
+    Explanation:
+    - The input grid is mirrored horizontally to produce the output grid.
+    """
+
+    if direction == 'hor':
+        return [row[::-1] for row in grid]
+    elif direction == 'ver':
+        return grid[::-1]
+    else:
+        raise ValueError("Direction must be 'horizontal' or 'vertical'")
+
+
+def shift_grid(grid, direction, steps):
+    """
+    Input:
+    A two-dimensional grid (list of lists) where each cell contains either zero or a positive integer.
+    Zero represents an empty cell, and positive integers represent different objects (e.g., different colors or identifiers).
+    A string representing the direction to shift the grid ('up', 'down', 'left', or 'right') and an integer representing the number of steps to shift.
+
+    Functionality:
+    The `shift_grid` function shifts the input grid in the specified direction by the given number of steps.
+    If the direction is 'up', the grid is shifted upwards.
+    If the direction is 'down', the grid is shifted downwards.
+    If the direction is 'left', the grid is shifted to the left.
+    If the direction is 'right', the grid is shifted to the right.
+    Cells that are shifted out of the grid's bounds are replaced with zeros.
+
+    Output:
+    A new two-dimensional grid that is the result of shifting the input grid in the specified direction by the given number of steps.
+
+    Example Input:
+    grid = [
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9]
+    ]
+    direction = 'up'
+    steps = 1
+
+    Example Output:
+    [
+        [4, 5, 6],
+        [7, 8, 9],
+        [0, 0, 0]
+    ]
+
+    Explanation:
+    - The input grid is shifted upwards by 1 step to produce the output grid.
+    - The top row is moved out of the grid and replaced with zeros at the bottom.
+    """
+
+    height = len(grid)
+    width = len(grid[0]) if height > 0 else 0
+    new_grid = [[0] * width for _ in range(height)]
+
+    if direction == 'up':
+        for i in range(height):
+            for j in range(width):
+                if i + steps < height:
+                    new_grid[i][j] = grid[i + steps][j]
+    elif direction == 'down':
+        for i in range(height):
+            for j in range(width):
+                if i - steps >= 0:
+                    new_grid[i][j] = grid[i - steps][j]
+    elif direction == 'left':
+        for i in range(height):
+            for j in range(width):
+                if j + steps < width:
+                    new_grid[i][j] = grid[i][j + steps]
+    elif direction == 'right':
+        for i in range(height):
+            for j in range(width):
+                if j - steps >= 0:
+                    new_grid[i][j] = grid[i][j - steps]
+    else:
+        raise ValueError("Direction must be 'up', 'down', 'left', or 'right'")
+
+    return new_grid
+
+
+def crop_grid(grid, top, bottom, left, right):
+    """
+    Input:
+    A two-dimensional grid (list of lists) where each cell contains either zero or a positive integer.
+    Zero represents an empty cell, and positive integers represent different objects (e.g., different colors or identifiers).
+    Four integers representing the number of rows/columns to crop from the top, bottom, left, and right of the grid.
+
+    Functionality:
+    The `crop_grid` function crops the input grid by removing the specified number of rows and columns from the edges.
+    The function removes `top` rows from the top, `bottom` rows from the bottom, `left` columns from the left, and `right` columns from the right.
+
+    Output:
+    A new two-dimensional grid that is the result of cropping the input grid by the specified amounts.
+
+    Example Input:
+    grid = [
+        [1, 2, 3, 4],
+        [5, 6, 7, 8],
+        [9, 10, 11, 12],
+        [13, 14, 15, 16]
+    ]
+    top = 1
+    bottom = 1
+    left = 1
+    right = 1
+
+    Example Output:
+    [
+        [6, 7],
+        [10, 11]
+    ]
+
+    Explanation:
+    - The input grid is cropped by removing 1 row from the top, 1 row from the bottom, 1 column from the left, and 1 column from the right.
+    - The resulting grid contains the remaining elements.
+    """
+
+    return [row[left:len(row)-right] for row in grid[top:len(grid)-bottom]]
+
+
+def draw_border(grid, border_value):
+    """
+    Input:
+    A two-dimensional grid (list of lists) where each cell contains either zero or a positive integer.
+    Zero represents an empty cell, and positive integers represent different objects (e.g., different colors or identifiers).
+    An integer representing the value to be used for the border.
+
+    Functionality:
+    The `draw_border` function adds a border around the input grid using the specified border value.
+    The border is one cell wide and surrounds the entire grid.
+
+    Output:
+    A new two-dimensional grid with the border added.
+
+    Example Input:
+    grid = [
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9]
+    ]
+    border_value = 9
+
+    Example Output:
+    [
+        [9, 9, 9, 9, 9],
+        [9, 1, 2, 3, 9],
+        [9, 4, 5, 6, 9],
+        [9, 7, 8, 9, 9],
+        [9, 9, 9, 9, 9]
+    ]
+
+    Explanation:
+    - The input grid is surrounded by a border of value '9' to produce the output grid.
+    """
+
+    height = len(grid)
+    width = len(grid[0]) if height > 0 else 0
+
+    # Create a new grid with the border
+    new_grid = [[border_value] * (width + 2) for _ in range(height + 2)]
+
+    # Copy the original grid into the new grid
+    for i in range(height):
+        for j in range(width):
+            new_grid[i + 1][j + 1] = grid[i][j]
+
+    return new_grid
