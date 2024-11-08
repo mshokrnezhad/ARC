@@ -280,3 +280,91 @@ def array_and(array_1, array_2, x_step_size, y_step_size):
             result[y:y + a1_height, x:x + a1_width] = and_result
 
     return result.tolist()
+
+
+def find_loops(grid):
+    import sys
+    sys.setrecursionlimit(10000)  # Increase recursion limit if necessary
+
+    rows = len(grid)
+    cols = len(grid[0]) if rows > 0 else 0
+
+    # Directions for 8-connectivity (including diagonals)
+    directions = [(-1, -1), (-1, 0), (-1, 1),
+                  (0, -1),          (0, 1),
+                  (1, -1),  (1, 0),  (1, 1)]
+
+    visited = set()
+    loops = []
+
+    def dfs(u, parent, path, rec_stack):
+        visited.add(u)
+        rec_stack.add(u)
+        path.append(u)
+
+        for dx, dy in directions:
+            nx, ny = u[0] + dx, u[1] + dy
+            v = (nx, ny)
+            if 0 <= nx < rows and 0 <= ny < cols and grid[nx][ny] != 0:
+                if v not in visited:
+                    dfs(v, u, path, rec_stack)
+                elif v != parent and v in rec_stack:
+                    # Found a cycle
+                    idx = path.index(v)
+                    cycle = path[idx:].copy()
+                    cycle_set = set(cycle)
+                    # Check if cycle is unique
+                    if not any(cycle_set == set(existing_loop['boundary']) for existing_loop in loops):
+                        loops.append({'boundary': cycle})
+        rec_stack.remove(u)
+        path.pop()
+
+    for i in range(rows):
+        for j in range(cols):
+            if grid[i][j] != 0 and (i, j) not in visited:
+                dfs((i, j), None, [], set())
+
+    # Now, for each loop, find the interior elements
+    for loop in loops:
+        boundary = loop['boundary']
+        boundary_set = set(boundary)
+        # Get bounding box
+        min_x = min(x for x, y in boundary)
+        max_x = max(x for x, y in boundary)
+        min_y = min(y for x, y in boundary)
+        max_y = max(y for x, y in boundary)
+        interior = []
+
+        # Build polygon from boundary coordinates
+        polygon = boundary.copy()
+
+        # Function to check if a point is inside a polygon
+        def point_in_polygon(point, polygon):
+            x, y = point
+            num = len(polygon)
+            j = num - 1
+            c = False
+            for i in range(num):
+                xi, yi = polygon[i]
+                xj, yj = polygon[j]
+                if ((yi > y) != (yj > y)) and \
+                        (x < (xj - xi) * (y - yi) / ((yj - yi) if yj != yi else 1e-10) + xi):
+                    c = not c
+                j = i
+            return c
+
+        # Check each point inside bounding box
+        for x in range(min_x, max_x + 1):
+            for y in range(min_y, max_y + 1):
+                if (x, y) not in boundary_set:
+                    if point_in_polygon((x, y), polygon):
+                        interior.append((x, y))
+
+        loop['interior'] = interior
+
+    return loops
+
+
+def change_elements_color(grid, elements, new_value):
+    for x, y in elements:
+        grid[x][y] = new_value
