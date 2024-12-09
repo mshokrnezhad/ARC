@@ -2,6 +2,8 @@ import drawsvg
 import svgwrite
 import numpy as np
 import json
+from copy import deepcopy
+from IPython.display import display, Image
 
 
 def draw_matrix(matrix, cell_size=2, output_file='matrix.svg'):

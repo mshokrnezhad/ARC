@@ -385,61 +385,6 @@ def change_elements_color(grid, elements, new_value):
 # region general blocks
 
 
-def enlarge(array, constant):
-    """
-    Input:
-    A two-dimensional array (list of lists or NumPy array) and a positive integer constant.
-
-    Functionality:
-    The `enlarge` function takes the input 2D array and enlarges it by repeating its elements based on the given constant.
-    The resulting enlarged array has dimensions that are `constant` times the dimensions of the original array.
-    Each element in the original array is expanded to cover a square block of size `constant x constant` in the enlarged array.
-
-    Output:
-    A new two-dimensional array where each element of the original array is repeated to form a larger grid.
-
-    Example Input:
-    original_array = [
-        [1, 2, 3],
-        [4, 5, 6]
-    ]
-    constant = 3
-
-    Example Output: [
-        [1 1 1 2 2 2 3 3 3]
-        [1 1 1 2 2 2 3 3 3]
-        [1 1 1 2 2 2 3 3 3]
-        [4 4 4 5 5 5 6 6 6]
-        [4 4 4 5 5 5 6 6 6]
-        [4 4 4 5 5 5 6 6 6]
-    ]
-
-    Explanation:
-    - Each element of the original array is repeated in a block of `constant x constant` size.
-    For example, the value '1' at position (0,0) in the original array is expanded to form a 3x3 block in the enlarged array.
-    """
-
-    # Convert the input to a NumPy array if it isn't already
-    array = np.array(array)
-
-    # Get the shape of the original array
-    original_rows, original_cols = array.shape
-
-    # Create a new enlarged array with the desired size
-    enlarged_rows = original_rows * constant
-    enlarged_cols = original_cols * constant
-
-    # Initialize the enlarged array with zeros
-    enlarged_array = np.zeros((enlarged_rows, enlarged_cols), dtype=array.dtype)
-
-    # Fill the enlarged array by repeating the original values
-    for i in range(enlarged_rows):
-        for j in range(enlarged_cols):
-            enlarged_array[i, j] = array[i // constant, j // constant]
-
-    return enlarged_array.tolist()
-
-
 def rotate_grid(grid, degrees):
     """
     Input:
@@ -682,6 +627,61 @@ def draw_border(grid, border_value):
             new_grid[i + 1][j + 1] = grid[i][j]
 
     return new_grid
+
+
+def enlarge(array, constant):
+    """
+    Input:
+    A two-dimensional array (list of lists or NumPy array) and a positive integer constant.
+
+    Functionality:
+    The `enlarge` function takes the input 2D array and enlarges it by repeating its elements based on the given constant.
+    The resulting enlarged array has dimensions that are `constant` times the dimensions of the original array.
+    Each element in the original array is expanded to cover a square block of size `constant x constant` in the enlarged array.
+
+    Output:
+    A new two-dimensional array where each element of the original array is repeated to form a larger grid.
+
+    Example Input:
+    original_array = [
+        [1, 2, 3],
+        [4, 5, 6]
+    ]
+    constant = 3
+
+    Example Output: [
+        [1 1 1 2 2 2 3 3 3]
+        [1 1 1 2 2 2 3 3 3]
+        [1 1 1 2 2 2 3 3 3]
+        [4 4 4 5 5 5 6 6 6]
+        [4 4 4 5 5 5 6 6 6]
+        [4 4 4 5 5 5 6 6 6]
+    ]
+
+    Explanation:
+    - Each element of the original array is repeated in a block of `constant x constant` size.
+    For example, the value '1' at position (0,0) in the original array is expanded to form a 3x3 block in the enlarged array.
+    """
+
+    # Convert the input to a NumPy array if it isn't already
+    array = np.array(array)
+
+    # Get the shape of the original array
+    original_rows, original_cols = array.shape
+
+    # Create a new enlarged array with the desired size
+    enlarged_rows = original_rows * constant
+    enlarged_cols = original_cols * constant
+
+    # Initialize the enlarged array with zeros
+    enlarged_array = np.zeros((enlarged_rows, enlarged_cols), dtype=array.dtype)
+
+    # Fill the enlarged array by repeating the original values
+    for i in range(enlarged_rows):
+        for j in range(enlarged_cols):
+            enlarged_array[i, j] = array[i // constant, j // constant]
+
+    return enlarged_array.tolist()
 
 
 # endregion
