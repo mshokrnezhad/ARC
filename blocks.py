@@ -684,4 +684,370 @@ def enlarge(array, constant):
     return enlarged_array.tolist()
 
 
+def invert_colors(grid):
+    """
+    Input:
+    A two-dimensional grid (list of lists) where each cell contains either zero or a positive integer.
+    Zero represents an empty cell, and positive integers represent different colors.
+
+    Functionality:
+    The `invert_colors` function inverts each color value in the grid relative to the maximum color value.
+    For each non-zero color value c, it is replaced with (max_color - c + 1), where max_color is the
+    highest color value in the original grid. Zero values (empty cells) remain unchanged.
+
+    Output:
+    A new two-dimensional grid with inverted color values.
+
+    Example Input:
+    grid = [
+        [1, 2, 0],
+        [0, 3, 4],
+        [5, 0, 2]
+    ]
+
+    Example Output:
+    [
+        [5, 4, 0],
+        [0, 3, 2],
+        [1, 0, 4]
+    ]
+
+    Explanation:
+    - The maximum color value in the input grid is 5
+    - Each non-zero value c is replaced with (5 - c + 1)
+    - Zero values remain unchanged
+    - For example, 1 becomes 5, 2 becomes 4, etc.
+    """
+
+    # Find the maximum color value in the grid
+    max_color = max(max(row) for row in grid)
+
+    # Create a new grid with the same dimensions
+    height = len(grid)
+    width = len(grid[0]) if height > 0 else 0
+    new_grid = [[0 for _ in range(width)] for _ in range(height)]
+
+    # Invert each color value
+    for i in range(height):
+        for j in range(width):
+            if grid[i][j] != 0:  # Only invert non-zero values
+                new_grid[i][j] = max_color - grid[i][j] + 1
+            else:
+                new_grid[i][j] = 0  # Keep zero values unchanged
+
+    return new_grid
+
+
+def threshold(grid, threshold_value=1, above_value=1):
+    """
+    Input:
+    A two-dimensional grid (list of lists) where each cell contains a numeric value,
+    a threshold value, and an optional value to assign for elements above threshold.
+
+    Functionality:
+    The `threshold` function converts the input grid into a binary matrix by comparing
+    each element with the threshold value. Elements below or equal to the threshold
+    are set to 0, while elements above the threshold are set to the specified above_value
+    (defaults to 1).
+
+    Output:
+    A new two-dimensional grid where elements have been thresholded.
+
+    Example Input:
+    grid = [
+        [1, 4, 2],
+        [5, 3, 6],
+        [2, 1, 4]
+    ]
+    threshold_value = 3
+    above_value = 1
+
+    Example Output:
+    [
+        [0, 1, 0],
+        [1, 0, 1],
+        [0, 0, 1]
+    ]
+
+    Explanation:
+    - Each value in the input grid is compared to the threshold (3)
+    - Values <= 3 are set to 0
+    - Values > 3 are set to above_value (1)
+    """
+
+    # Get the dimensions of the input grid
+    height = len(grid)
+    width = len(grid[0]) if height > 0 else 0
+
+    # Create a new grid with the same dimensions
+    new_grid = [[0 for _ in range(width)] for _ in range(height)]
+
+    # Apply thresholding
+    for i in range(height):
+        for j in range(width):
+            if grid[i][j] > threshold_value:
+                new_grid[i][j] = above_value
+            else:
+                new_grid[i][j] = 0
+
+    return new_grid
+
+
+def detect_edges(grid):
+    """
+    Input:
+    A two-dimensional grid (list of lists) where each cell contains a numeric value.
+
+    Functionality:
+    The `detect_edges` function detects edges in the input grid by comparing each cell
+    with its neighbors. A cell is considered part of an edge if it differs from any
+    of its adjacent cells. The function uses a simple edge detection approach based
+    on value differences between neighboring cells.
+
+    Output:
+    A new two-dimensional grid where edges are marked with 1's and non-edges with 0's.
+
+    Example Input:
+    grid = [
+        [1, 1, 1, 5],
+        [1, 1, 5, 5],
+        [1, 5, 5, 5],
+        [5, 5, 5, 5]
+    ]
+
+    Example Output:
+    [
+        [0, 0, 1, 1],
+        [0, 1, 1, 0],
+        [1, 1, 0, 0],
+        [1, 0, 0, 0]
+    ]
+
+    Explanation:
+    - Each cell is compared with its adjacent neighbors (up, down, left, right)
+    - If any neighbor has a different value, the cell is marked as an edge (1)
+    - Otherwise, the cell is marked as non-edge (0)
+    """
+
+    # Get dimensions of input grid
+    height = len(grid)
+    width = len(grid[0]) if height > 0 else 0
+
+    # Create output grid initialized with zeros
+    edges = [[0 for _ in range(width)] for _ in range(height)]
+
+    # Check each cell
+    for i in range(height):
+        for j in range(width):
+            # Get current cell value
+            current = grid[i][j]
+
+            # Check neighbors
+            is_edge = False
+
+            # Check left neighbor
+            if j > 0 and grid[i][j-1] != current:
+                is_edge = True
+
+            # Check right neighbor
+            if j < width-1 and grid[i][j+1] != current:
+                is_edge = True
+
+            # Check top neighbor
+            if i > 0 and grid[i-1][j] != current:
+                is_edge = True
+
+            # Check bottom neighbor
+            if i < height-1 and grid[i+1][j] != current:
+                is_edge = True
+
+            # Mark as edge if any neighbor was different
+            edges[i][j] = 1 if is_edge else 0
+
+    return edges
+
+
+def blur(grid, kernel_size=3):
+    """
+    Input:
+    A two-dimensional grid (list of lists) where each cell contains a numeric value,
+    and an optional kernel_size parameter (default 3) that determines the blur intensity.
+
+    Functionality:
+    The `blur` function applies an averaging blur filter to the input grid by replacing
+    each cell's value with the average of its surrounding cells (including itself).
+    The kernel_size parameter determines how many neighboring cells to include.
+
+    Output:
+    A new two-dimensional grid where each value has been blurred using its neighbors.
+
+    Example Input:
+    grid = [
+        [1, 4, 2],
+        [5, 3, 6],
+        [2, 8, 1]
+    ]
+    kernel_size = 3
+
+    Example Output:
+    [
+        [3, 3, 4],
+        [4, 4, 4],
+        [4, 4, 3]
+    ]
+
+    Explanation:
+    - Each output value is the average of the surrounding values in a kernel_size x kernel_size window
+    - Edge pixels use whatever neighbors are available
+    - Values are rounded to nearest integer
+    """
+    import numpy as np
+
+    # Convert input to numpy array for easier processing
+    grid = np.array(grid)
+    height, width = grid.shape
+
+    # Create output grid of same size
+    blurred = np.zeros((height, width), dtype=grid.dtype)
+
+    # Calculate padding size
+    pad = kernel_size // 2
+
+    # Add padding to input grid
+    padded = np.pad(grid, pad, mode='edge')
+
+    # Apply blur filter
+    for i in range(height):
+        for j in range(width):
+            # Extract neighborhood
+            neighborhood = padded[i:i+kernel_size, j:j+kernel_size]
+            # Calculate average
+            blurred[i, j] = int(round(np.mean(neighborhood)))
+
+    return blurred.tolist()
+
+
+def sharpen(grid, amount=1):
+    """
+    Input:
+    A two-dimensional grid (list of lists) where each cell contains a numeric value,
+    and an optional amount parameter (default 1) that controls sharpening intensity.
+
+    Functionality:
+    The `sharpen` function enhances edges in the input grid by emphasizing differences
+    between neighboring cells. It uses a sharpening kernel that increases central values
+    while decreasing surrounding values.
+
+    Output:
+    A new two-dimensional grid where edges and details have been enhanced.
+
+    Example Input:
+    grid = [
+        [1, 2, 1],
+        [2, 3, 2],
+        [1, 2, 1]
+    ]
+    amount = 1
+
+    Example Output:
+    [
+        [1, 1, 1],
+        [1, 5, 1],
+        [1, 1, 1]
+    ]
+
+    Explanation:
+    - Uses a 3x3 sharpening kernel to enhance central pixels
+    - The amount parameter controls sharpening intensity
+    - Values are clamped to maintain valid range
+    """
+    import numpy as np
+
+    # Convert input to numpy array for easier processing
+    grid = np.array(grid)
+    height, width = grid.shape
+
+    # Create output grid of same size
+    sharpened = np.zeros((height, width), dtype=grid.dtype)
+
+    # Sharpening kernel
+    kernel = np.array([
+        [0, -1, 0],
+        [-1, 4 + amount, -1],
+        [0, -1, 0]
+    ])
+
+    # Add padding to input grid
+    padded = np.pad(grid, 1, mode='edge')
+
+    # Apply sharpening filter
+    for i in range(height):
+        for j in range(width):
+            # Extract neighborhood
+            neighborhood = padded[i:i+3, j:j+3]
+            # Apply kernel
+            value = np.sum(neighborhood * kernel)
+            # Clamp value to valid range
+            sharpened[i, j] = max(0, min(9, value))
+
+    return sharpened.tolist()
+
+
+def add_noise(grid, intensity=1):
+    """
+    Input:
+    A two-dimensional grid (list of lists) where each cell contains a numeric value,
+    and an optional intensity parameter (default 1) that controls noise strength.
+
+    Functionality:
+    The `add_noise` function adds random variations to the color values in the grid.
+    Each value is modified by adding or subtracting a random amount up to the 
+    specified intensity level.
+
+    Output:
+    A new two-dimensional grid with random noise added to the values.
+
+    Example Input:
+    grid = [
+        [1, 2, 1],
+        [2, 3, 2],
+        [1, 2, 1]
+    ]
+    intensity = 1
+
+    Example Output:
+    [
+        [2, 1, 1],
+        [2, 4, 1], 
+        [1, 3, 2]
+    ]
+
+    Explanation:
+    - Each value is modified by adding/subtracting a random amount
+    - The intensity parameter controls maximum change
+    - Values are clamped to valid range (0-9)
+    """
+    import numpy as np
+
+    # Convert input to numpy array for easier processing
+    grid = np.array(grid)
+    height, width = grid.shape
+
+    # Create output grid of same size
+    noisy = np.zeros((height, width), dtype=grid.dtype)
+
+    # Add random noise to each value
+    for i in range(height):
+        for j in range(width):
+            if grid[i, j] > 0:  # Only add noise to non-zero values
+                noise = np.random.randint(-intensity, intensity+1)
+                value = grid[i, j] + noise
+                # Clamp to valid range
+                noisy[i, j] = max(0, min(9, value))
+            else:
+                noisy[i, j] = 0  # Keep zero values unchanged
+
+    return noisy.tolist()
+
+
 # endregion

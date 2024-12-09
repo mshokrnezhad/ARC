@@ -359,11 +359,12 @@ def analyze_task(task_json):
         print(f"{is_equal}, Similarity Ratio: {similarity_ratio}%")
 
 
-def store_json(id, transition, task_, filename):
+def store_json(id, index, transition, task_, filename):
     with open(filename, 'r') as file:
         data = json.load(file)
 
     task = {}
+    task["index"] = index
     task["transition"] = transition
     task["task"] = task_
 
@@ -392,3 +393,16 @@ def check_duplication(ids_path, id):
         task_ids = json.load(file)
 
     return any(id == sub_value for sub_value in task_ids.values()) == False
+
+
+def check_duplicate_transition(data_path, index, transition_config):
+    # Load existing data to check for duplicate transitions
+    with open(data_path, 'r') as f:
+        existing_data = json.load(f)
+
+    # Check if same transition has already been applied to this index
+    if str(index) in existing_data:
+        if existing_data[str(index)]['transition'] == transition_config:
+            print(f"Same transition already exists for index {index}")
+            return True
+    return False
